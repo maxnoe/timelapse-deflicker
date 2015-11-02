@@ -19,7 +19,6 @@ import numpy as np
 import os
 import pandas as pd
 import warnings
-from collections import deque
 from progressbar import ProgressBar
 from skimage import io
 from skimage import img_as_ubyte, img_as_uint, img_as_float
@@ -99,7 +98,7 @@ def deflicker_images(images, window, outdir, fmt='png'):
     target_brightness = pd.rolling_mean(brightness, window)
 
     logger.info('Start brightness correction')
-    prog = getProgressBar(logger)
+    prog = getProgressBar(logger, maxval=len(images))
     for filename, b, tb in prog(zip(images, brightness, target_brightness)):
         image = io.imread(filename)
         if np.isnan(tb):
@@ -107,7 +106,10 @@ def deflicker_images(images, window, outdir, fmt='png'):
         else:
             adjusted_image = scale_image_brightness(image, tb / b)
         io.imsave(
-            os.path.join(outdir, os.path.splitext(os.path.basename(filename))[0] + '.' + fmt),
+            os.path.join(
+                outdir,
+                os.path.splitext(os.path.basename(filename))[0] + '.' + fmt
+            ),
             adjusted_image,
         )
     print()
