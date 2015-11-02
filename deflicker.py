@@ -35,13 +35,13 @@ def getProgressBar(logger, level=logging.INFO, **kwargs):
     return prog
 
 
-def find_images(directory, extensions=['.jpg', '.png', '.tiff']):
+def find_images(directory, extensions=['.jpg', '.png', '.tiff', '.tif']):
     images = []
     logger = logging.getLogger()
     for root, dirs, files in os.walk(directory):
         for f in files:
             name, extension = os.path.splitext(f)
-            if extension in extensions:
+            if extension.lower() in extensions:
                 images.append(os.path.join(root, f))
     logger.info(
         'Found {} images in directory {}'.format(len(images), directory)
