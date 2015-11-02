@@ -105,13 +105,16 @@ def deflicker_images(images, window, outdir, fmt='png'):
             adjusted_image = image.copy()
         else:
             adjusted_image = scale_image_brightness(image, tb / b)
-        io.imsave(
-            os.path.join(
-                outdir,
-                os.path.splitext(os.path.basename(filename))[0] + '.' + fmt
-            ),
-            adjusted_image,
-        )
+
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=UserWarning)
+            io.imsave(
+                os.path.join(
+                    outdir,
+                    os.path.splitext(os.path.basename(filename))[0] + '.' + fmt
+                ),
+                adjusted_image,
+            )
     print()
     logger.info('Brightness correction finished')
 
