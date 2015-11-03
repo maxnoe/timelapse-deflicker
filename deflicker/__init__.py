@@ -1,22 +1,3 @@
-'''
-A small tool for deflickering images for time lapse videos.
-The brightness of the images are adjusted to a rolling mean above <N> images
-For the calculation of the image brightness, outliers are discarded via
-sigma clipping if the --sigma option is given
-
-Usage:
-    deflicker.py <inputdir> [options]
-
-Options:
-    -o <dir>, --outdir=<dir>  Output directory [default: deflickered]
-    -w <N>, --window=<N>      Window size for rolling mean [default: 10]
-    -q, --quiet               Only output errors and warnings
-    -f <fmt>, --format=<fmt>  Output format for the scaled images [default: png]
-    -s <s>, --sigma=<s>       Sigma for the sigma clipping
-'''
-
-__version__ = 0.1
-
 import logging
 import numpy as np
 import os
@@ -25,7 +6,8 @@ from progressbar import ProgressBar
 from skimage import io
 from skimage import img_as_ubyte, img_as_uint, img_as_float
 
-from docopt import docopt
+import pkg_resources
+__version__ = pkg_resources.require('deflicker')[0].version
 
 
 def rolling_mean(data, window):
@@ -143,49 +125,3 @@ def deflicker_images(images, window, outdir, fmt='png', sigma=2.5):
             )
     print()
     logger.info('Brightness correction finished')
-
-
-def main(args):
-    logger = logging.getLogger()
-    logging.info('This is deflicker {}'.format(__version__))
-    images = find_images(args['<inputdir>'])
-    window = int(args['--window'])
-    outdir = args['--outdir']
-    sigma = float(args['--sigma']) if args['--sigma'] else None
-
-    if args['--format'].lower() not in ['png', 'tiff', 'tif', 'jpg', 'jpeg']:
-        message = 'Not supported output format: {}'.format(args['--format'])
-        logger.error(message)
-        raise ValueError(message)
-
-    if not os.path.exists(outdir):
-        logger.info('Outputdir {} does not exist, creating it'.format(outdir))
-        os.makedirs(outdir)
-
-    deflicker_images(
-        images,
-        window,
-        outdir,
-        fmt=args['--format'],
-        sigma=sigma,
-    )
-
-
-if __name__ == '__main__':
-    args = docopt(__doc__, version=__version__)
-
-    if args['--quiet']:
-        loglevel = logging.WARNING
-    else:
-        loglevel = logging.INFO
-
-    logging.basicConfig(
-        level=loglevel,
-        format='%(asctime)s - %(levelname)s | %(message)s',
-        datefmt='%H:%M:%S',
-    )
-
-    try:
-        main(args)
-    except (KeyboardInterrupt, SystemExit):
-        pass
