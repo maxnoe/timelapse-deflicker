@@ -1,6 +1,8 @@
 '''
 A small tool for deflickering images for time lapse videos.
 The brightness of the images are adjusted to a rolling mean above <N> images
+For the calculation of the image brightness, outliers are discarded via
+sigma clipping if the --sigma option is given
 
 Usage:
     deflicker.py <inputdir> [options]
@@ -10,6 +12,7 @@ Options:
     -w <N>, --window=<N>      Window size for rolling mean [default: 10]
     -q, --quiet               Only output errors and warnings
     -f <fmt>, --format=<fmt>  Output format for the scaled images [default: png]
+    -s <s>, --sigma=<s>       Sigma for the sigma clipping
 '''
 
 __version__ = 0.1
@@ -28,8 +31,7 @@ from docopt import docopt
 def rolling_mean(data, window):
     ''' compute the rolling mean of the data over the given window '''
 
-    result = np.empty_like(data)
-    result.fill(np.nan)
+    result = np.full_like(data, np.nan)
 
     conv = np.convolve(data, np.ones(window)/window, mode='valid')
     result[(len(data) - len(conv))//2: (len(conv) - len(data))//2] = conv
@@ -62,7 +64,7 @@ def find_images(directory, extensions=['.jpg', '.png', '.tiff', '.tif']):
     return sorted(images)
 
 
-def calc_brightness(images):
+def calc_brightness(images, sigma=2.5):
     logger = logging.getLogger()
     logger.info('Calculating brightness of the images')
 
@@ -70,7 +72,16 @@ def calc_brightness(images):
     prog = getProgressBar(logger)
     for filename in prog(images):
         image = io.imread(filename)
-        brightness.append(np.mean(image))
+        mask = np.ones_like(image[:, :, 0], dtype=bool)
+
+        if sigma is not None:
+            for channel in range(3):
+                mean = np.mean(image[:, :, channel])
+                std = np.std(image[:, :, channel])
+                dist = np.abs(image[:, :, channel] - mean) / std
+                mask[dist > sigma] = False
+
+        brightness.append(np.mean(image[mask]))
 
     return np.array(brightness)
 
@@ -92,7 +103,7 @@ def scale_image_brightness(image, scale):
     return adjusted_image
 
 
-def deflicker_images(images, window, outdir, fmt='png'):
+def deflicker_images(images, window, outdir, fmt='png', sigma=2.5):
     ''' Deflicker images
     Image brightness is scaled to match a rolling mean to avoid flickering
 
@@ -108,7 +119,7 @@ def deflicker_images(images, window, outdir, fmt='png'):
         Output format. One of png, tiff, jpg
     '''
     logger = logging.getLogger()
-    brightness = calc_brightness(images)
+    brightness = calc_brightness(images, sigma=sigma)
 
     target_brightness = rolling_mean(brightness, window)
 
@@ -140,6 +151,7 @@ def main(args):
     images = find_images(args['<inputdir>'])
     window = int(args['--window'])
     outdir = args['--outdir']
+    sigma = float(args['--sigma']) if args['--sigma'] else None
 
     if args['--format'].lower() not in ['png', 'tiff', 'tif', 'jpg', 'jpeg']:
         message = 'Not supported output format: {}'.format(args['--format'])
