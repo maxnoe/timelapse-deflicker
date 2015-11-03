@@ -8,7 +8,7 @@ Usage:
 Options:
     -o <dir>, --outdir=<dir>  Output directory [default: deflickered]
     -w <N>, --window=<N>      Window size for rolling mean [default: 10]
-    -v, --verbose             Show verbose output
+    -q, --quiet               Only output errors and warnings
     -f <fmt>, --format=<fmt>  Output format for the scaled images [default: png]
 '''
 
@@ -150,16 +150,22 @@ def main(args):
         logger.info('Outputdir {} does not exist, creating it'.format(outdir))
         os.makedirs(outdir)
 
-    deflicker_images(images, window, outdir, fmt=args['--format'])
+    deflicker_images(
+        images,
+        window,
+        outdir,
+        fmt=args['--format'],
+        sigma=sigma,
+    )
 
 
 if __name__ == '__main__':
     args = docopt(__doc__, version=__version__)
 
-    if args['--verbose']:
-        loglevel = logging.INFO
-    else:
+    if args['--quiet']:
         loglevel = logging.WARNING
+    else:
+        loglevel = logging.INFO
 
     logging.basicConfig(
         level=loglevel,
