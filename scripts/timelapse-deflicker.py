@@ -6,7 +6,7 @@ For the calculation of the image brightness, outliers are discarded via
 sigma clipping if the --sigma option is given
 
 Usage:
-    deflicker.py <inputdir> [options]
+    timelapse-deflicker.py <inputdir> [options]
 
 Options:
     -o <dir>, --outdir=<dir>  Output directory [default: deflickered]
