@@ -35,17 +35,20 @@ def getProgressBar(logger, level=logging.INFO, **kwargs):
 
 
 def find_images(directory, extensions=['.jpg', '.png', '.tiff', '.tif']):
-    images = []
     logger = logging.getLogger()
-    for root, dirs, files in os.walk(directory):
-        for f in files:
-            name, extension = os.path.splitext(f)
-            if extension.lower() in extensions:
-                images.append(os.path.join(root, f))
+
+    images = []
+    # walk just the parent dir, reuturn empty list of nothing found
+    root, _, files = next(os.walk(directory), (None, None, []))
+    for f in files:
+        name, extension = os.path.splitext(f)
+        if extension.lower() in extensions:
+            images.append(os.path.join(root, f))
+
     logger.info(
         'Found {} images in directory {}'.format(len(images), directory)
     )
-    return images
+    return sorted(images)
 
 
 def calc_brightness(images):
