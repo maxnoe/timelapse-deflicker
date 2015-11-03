@@ -17,13 +17,24 @@ __version__ = 0.1
 import logging
 import numpy as np
 import os
-import pandas as pd
 import warnings
 from progressbar import ProgressBar
 from skimage import io
 from skimage import img_as_ubyte, img_as_uint, img_as_float
 
 from docopt import docopt
+
+
+def rolling_mean(data, window):
+    ''' compute the rolling mean of the data over the given window '''
+
+    result = np.empty_like(data)
+    result.fill(np.nan)
+
+    conv = np.convolve(data, np.ones(window)/window, mode='valid')
+    result[(len(data) - len(conv))//2: (len(conv) - len(data))//2] = conv
+
+    return result
 
 
 def getProgressBar(logger, level=logging.INFO, **kwargs):
@@ -98,7 +109,8 @@ def deflicker_images(images, window, outdir, fmt='png'):
     '''
     logger = logging.getLogger()
     brightness = calc_brightness(images)
-    target_brightness = pd.rolling_mean(brightness, window)
+
+    target_brightness = rolling_mean(brightness, window)
 
     logger.info('Start brightness correction')
     prog = getProgressBar(logger, maxval=len(images))
