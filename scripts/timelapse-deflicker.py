@@ -16,54 +16,72 @@ Options:
     -s <s>, --sigma=<s>       Sigma for the sigma clipping
 '''
 
-
-import logging
-from docopt import docopt
-import deflicker
+import sys
 import os
+import logging
+from docopt import docopt, DocoptExit
+from schema import Schema, And, Or, Use, SchemaError
+
+import deflicker
 
 
-def main(args):
+def mkdir_p(directory):
     logger = logging.getLogger()
-    logging.info('This is deflicker {}'.format(deflicker.__version__))
-    images = deflicker.find_images(args['<inputdir>'])
-    window = int(args['--window'])
-    outdir = args['--outdir']
-    sigma = float(args['--sigma']) if args['--sigma'] else None
+    if not os.path.exists(directory):
+        logger.info('Created directory: {}'.format(directory))
+        os.makedirs(directory)
+    return directory
 
-    if args['--format'].lower() not in ['png', 'tiff', 'tif', 'jpg', 'jpeg']:
-        message = 'Not supported output format: {}'.format(args['--format'])
-        logger.error(message)
-        raise ValueError(message)
+formats = ['png', 'tiff', 'tif', 'jpg', 'jpeg']
 
-    if not os.path.exists(outdir):
-        logger.info('Outputdir {} does not exist, creating it'.format(outdir))
-        os.makedirs(outdir)
+args_schema = Schema({
+    '<inputdir>': Schema(os.path.exists, '<inputdir> does not exist'),
+    '--window': And(
+        Use(int), lambda x: x > 0,
+        error='--window has to be a positive integer'
+    ),
+    '--format': Or(*formats, error='Unsupported format'),
+    '--sigma':  Or(
+        None,
+        And(Use(float), lambda x: x > 0, error='--sigma must be positive'),
+    ),
+    '--outdir': Use(mkdir_p),
+    '--quiet': bool,
+})
 
-    deflicker.deflicker_images(
-        images,
-        window,
-        outdir,
-        fmt=args['--format'],
-        sigma=sigma,
-    )
+
+def main():
+    try:
+        args = docopt(__doc__, version=deflicker.__version__)
+        args = args_schema.validate(args)
+
+        logging.basicConfig(
+            level=logging.WARNING if args['--quiet'] else logging.INFO,
+            format='%(asctime)s - %(levelname)s | %(message)s',
+            datefmt='%H:%M:%S',
+        )
+        logger = logging.getLogger()
+        logger.info('This is deflicker {}'.format(deflicker.__version__))
+
+        images = deflicker.find_images(args['<inputdir>'])
+        if not images:
+            logger.error('No images found in "{}"'.format(args['<inputdir>']))
+            sys.exit(1)
+
+        deflicker.deflicker_images(
+            images,
+            args['--window'],
+            args['--outdir'],
+            fmt=args['--format'],
+            sigma=args['--sigma'],
+        )
+    except DocoptExit as e:
+        print(e)
+    except SchemaError as e:
+        print(e)
+    except (KeyboardInterrupt, SystemExit):
+        pass
 
 
 if __name__ == '__main__':
-    args = docopt(__doc__, version=deflicker.__version__)
-
-    if args['--quiet']:
-        loglevel = logging.WARNING
-    else:
-        loglevel = logging.INFO
-
-    logging.basicConfig(
-        level=loglevel,
-        format='%(asctime)s - %(levelname)s | %(message)s',
-        datefmt='%H:%M:%S',
-    )
-
-    try:
-        main(args)
-    except (KeyboardInterrupt, SystemExit):
-        pass
+    main()

@@ -14,6 +14,7 @@ setup(
         'scikit-image',
         'progressbar2',
         'docopt',
+        'schema',
     ],
     scripts=['scripts/timelapse-deflicker.py'],
     zip_safe=False,
