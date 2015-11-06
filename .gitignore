@@ -1,3 +1,4 @@
+test_images
 # vim backups
 *.swp
 
@@ -60,3 +61,4 @@ docs/_build/
 
 # PyBuilder
 target/
+
