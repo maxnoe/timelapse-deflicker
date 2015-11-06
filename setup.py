@@ -9,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='deflicker',
-    version='0.1.0',
+    version='0.1.1',
     description='Adjust the brightness of images for smooth timelapse videos',
     long_description=long_description,
     url='http://github.com/maxnoe/timelapse-deflicker',
