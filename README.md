@@ -11,7 +11,7 @@ I was looking for an existing solution and only found expensive (O(100€))
 software.
 
 So I wrote this little (150 SLOCS) programm.
-The brightness of the images are adjusted to fit a rolling mean several consecutive images.
+The brightness of the images are adjusted to fit a rolling mean over several consecutive images.
 
 
 ## Installation
@@ -26,11 +26,16 @@ $ pip install git+https://github.com/maxnoe/timelapse-deflicker
 
 ## Usage
 
-`timelapse-deflicker` expects all your pictures in one folder
-and named in a scheme, that an alphabetical sorting results in the
-correct chronological order.
+`deflicker` expects all your pictures in one directory.
+The alphabetical order has to be equivalent to the chronological order.
 
-The adjusted images are saved in the folder `deflickerd` by default.
+```
+deflicker <inputfolder> [options]
+```
 
-You can use sigma clipping to get rid of outliers for the calculation 
-of the correction factor.
+### Options
+* `-o <dir>, --outdir=<dir>`  Output directory [default: deflickered]
+* `-w <N>, --window=<N>`      Window size for rolling mean [default: 10]
+* `-q, --quiet`               Only output errors and warnings
+* `-f <fmt>, --format=<fmt>`  Output format for the scaled images [default: png]
+* `-s <s>, --sigma=<s>`       Sigma for the sigma clipping
