@@ -16,6 +16,10 @@ setup(
         'docopt',
         'schema',
     ],
-    scripts=['scripts/timelapse-deflicker.py'],
+    entry_points={
+        'console_scripts': [
+            'deflicker = deflicker.__main__:main',
+        ],
+    },
     zip_safe=False,
 )
