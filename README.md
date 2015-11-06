@@ -21,7 +21,7 @@ I recommend anaconda, it comes with the heavy dependencies of this package:
 Installation of `deflicker`:
 
 ```
-$ pip install git+https://github.com/maxnoe/timelapse-deflicker
+$ pip install deflicker
 ```
 
 ## Usage
